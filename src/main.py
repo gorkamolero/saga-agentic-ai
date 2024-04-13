@@ -1,13 +1,15 @@
+import os
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
-from crewai import Crew
+from crewai import Crew, Process
+from langchain_openai import ChatOpenAI
 from tasks import ScriptTasks
 from agents import ScriptAgents
 
+load_dotenv()
+
 def main():
-    load_dotenv()
-    
     tasks = ScriptTasks()
     agents = ScriptAgents()
 
@@ -17,7 +19,7 @@ def main():
     concept = input("What is the concept you would like to develop today? Give us a brief overview of your idea: ")
 
     # Agents
-    concept_developer = agents.concept_developer()
+    big_boss = agents.big_boss()
     researcher = agents.researcher()
     staff_writer = agents.staff_writer()
     gen_z_viralizer = agents.gen_z_viralizer()
@@ -26,28 +28,32 @@ def main():
     senior_editor = agents.senior_editor()
 
     # Tasks
-    scriptDirection = tasks.imagine(concept_developer, concept)
-    researchFindings = tasks.research(researcher, concept)
-    outline_task = tasks.outline(staff_writer, concept)
-    firstDraft = tasks.firstDraft(staff_writer, concept)
+    brief = tasks.imagine(big_boss, concept)
+    researchFindings = tasks.research(researcher)
+    outline = tasks.outline(staff_writer)
+    firstDraft = tasks.firstDraft(staff_writer)
     factCheck = tasks.factCheck(researcher)
-    viralDraft = tasks.viralize(gen_z_viralizer, concept)
+    viralDraft = tasks.viralize(gen_z_viralizer)
     finalDraft = tasks.finalDraft(senior_writer)
     scriptCritique = tasks.critique(critic)
     script = tasks.script(senior_editor)
+    theFinalTouch = tasks.theFinalTouch(big_boss)
 
-    outline_task.context = [researchFindings, scriptDirection]
-    firstDraft.context = [outline_task]
+    researchFindings.context = [brief]
+    outline.context = [brief, researchFindings]
+    firstDraft.context = [brief, outline]
     factCheck.context = [firstDraft, researchFindings]
     viralDraft.context = [firstDraft]
-    finalDraft.context = [viralDraft, factCheck]
+    finalDraft.context = [viralDraft, factCheck, brief]
     scriptCritique.context = [finalDraft]
-    script.context = [finalDraft, scriptCritique]
+    script.context = [finalDraft, scriptCritique, brief]
+    theFinalTouch.context = [script, brief]
+
 
     # Crew
     crew = Crew(
         agents=[
-            concept_developer,
+            big_boss,
             researcher,
             staff_writer,
             gen_z_viralizer,
@@ -56,19 +62,24 @@ def main():
             senior_editor
         ],
         tasks=[
-            scriptDirection,
+            brief,
             researchFindings,
-            outline_task,
+            outline,
             firstDraft,
             factCheck,
             viralDraft,
             finalDraft,
             scriptCritique,
-            script
+            script,
+            theFinalTouch
         ],
-        manager_llm=ChatOpenAI(temperature=0, model="gpt-4-turbo"),
-        process="hierarchical",
-        memory=True
+        #manager_llm=ClaudeOpus,
+        #manager_llm=ChatOpenAI(
+        #    temperature=0,
+        #    model="gpt-4-turbo"
+        #),
+        #process=Process.hierarchical,
+        #memory=True
     )
 
     result = crew.kickoff()

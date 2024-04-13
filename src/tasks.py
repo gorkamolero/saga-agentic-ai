@@ -7,63 +7,57 @@ class ScriptTasks():
     def imagine(self, agent, concept):
         return Task(
             description=dedent(f"""\
-                Generate a creative and engaging way to develop the original 
-                concept into a compelling script for a YouTube video of around {SCRIPT_DURATION_IN_SECONDS} seconds.
-                               
-                Consider unique angles, narrative structures, and storytelling techniques that will 
-                capture the audience's attention and effectively convey the 
-                intended message.
+                We are creating a video about {concept}.
                 
-                Build upon the original idea by exploring different 
-                possibilities for character arcs, plot twists, visual motifs,
-                and thematic depth. Aim to create a fresh and memorable take on
-                the core concept that will resonate with an online audience.
+                First, define the project scope, objectives, and deliverables for the script development process:
+                - Clearly outline the goals, target audience, key messages, duration and intended use case for the script. 
+                - Identify the core concept or idea that will serve as the foundation for the script, and establish the creative direction and tone for the project.
+                - Pre-requirements: {REQUIREMENTS}
                 
-                Provide a high-level script direction, with TONE and WRITING STYLE a
-                brief summary of how it expands on the original idea in an 
-                innovative and engaging way.
-
-                Provide your reasons and a step-by-step explanation on how you achieved this result.
+                Then, generate a creative and engaging way to develop this concept into a compelling script for a YouTube video of approximately {SCRIPT_DURATION_IN_SECONDS} seconds:
+                - Consider unique angles, narrative structures, and storytelling techniques that will capture the audience's attention and effectively convey the intended message.
+                - Build upon the original idea by exploring different possibilities for character arcs, plot twists, visual motifs, and thematic depth. Aim to create a fresh and memorable take on the core concept that will resonate with an online audience.
+                - Provide a high-level script direction, with tone and writing style, and a brief summary of how it expands on the original idea in an innovative and engaging way.
                 
-                Original Concept: {concept}
+                Provide your reasons and a step-by-step explanation on how you achieved these results.
             """),
-            expected_output=dedent(f"""\
-                An extremely detailed description of the future script, each described in
-                2-3 sentences. It should take the original idea in
-                distinct and compelling new directions, demonstrating creative
-                approaches to character, plot, theme, and style that will 
-                engage the target audience. The direction should feel fresh 
-                and true to the spirit of the original concept.
+            expected_output=dedent("""\
+                A detailed project brief and script direction that includes:
+                - Core concept or idea for the script
+                - Core themes and narrative elements
+                - Project goals and objectives
+                - Target audience and key messages
+                - Intended use case for the script
+                - Creative direction and tone for the project
+                - Any additional requirements or constraints
+                - An detailed description of an imagined script, described in 2-3 sentences. It should take the original idea in a distinct and compelling direction, demonstrating creative approaches to character, plot, theme, and style that will engage the target audience. The direction should feel fresh and true to the spirit of the original concept. Remember the duration: {SCRIPT_DURATION_IN_SECONDS} seconds.
             """),
             agent=agent,
-            async_execution=True,
+            async_execution=False,
         )
 
-    def research(self, agent, concept):
+
+    def research(self, agent):
         # add: Tone: {TONE}
         return Task(
             description=dedent(f"""\
-                Conduct in-depth research on the chosen script concept, diving into the relevant subject matter, themes, and contextual details. Gather information from reputable sources, subject matter experts, and real-world examples to ensure accuracy and authenticity. Organize the research findings into a structured document.
-                
-                Chosen Concept: {concept}
+                Conduct in-depth research on the themes *brief*, diving into the relevant subject matter, themes, and contextual details. Gather information from your enormous wealth of knowledge with real-world examples to ensure accuracy and authenticity. Organize the research findings into a structured document.
             """),
             expected_output=dedent(f"""\
-                A comprehensive research document divided into sections based on key topics and themes. Each section should contain detailed information, statistics, quotes, and examples that provide a solid foundation for the script. Sources should be properly cited.
+                A succint but comprehensive research document divided into sections based on key topics and themes. Each section should contain detailed information, statistics, quotes, and examples that provide a solid foundation for the script. Sources should be properly cited.
             """),
             agent=agent,
-            async_execution=True,
+            async_execution=False,
         )
     
-    def outline(self, agent, concept):
+    def outline(self, agent):
         return Task(
             description=dedent(f"""\
-                Create a detailed outline for the script based on the *research findings* and the given *script direction* for the concept "{concept}".
+                Create a detailed outline for the script based on the *brief*, the *research findings* and the given *script direction* for the project.
                 
                 Break down the narrative into distinct scenes or sections, describing the key events, character developments, and emotional beats. Ensure the outline has a clear beginning, middle, and end, with a logical flow and progression of ideas.
 
                 The outline should be optimized for a video of {SCRIPT_DURATION_IN_SECONDS} seconds.
-
-                {REQUIREMENTS}
             """),
             expected_output=dedent(f"""\
                 A comprehensive script outline with a hierarchical structure.
@@ -73,19 +67,17 @@ class ScriptTasks():
             async_execution=False,
         )
     
-    def firstDraft(self, agent, concept):
+    def firstDraft(self, agent):
         # Take inspiration from the following writers: {WRITERS_TO_EMULATE}
         return Task(
             description=dedent(f"""\
-                Write the first draft of the script based on the *outline*, the *research findings*, and the given *script direction* for the concept "{concept}".
+                Write the first draft of the script based on the *brief*, the *outline*, the *research findings*, and the given *script direction*.
                 
                 Craft a compelling monologue to be read by a single voice actor, with rich descriptions, and emotive language to bring the story, characters and narrative to life. Focus on getting the complete narrative down without worrying too much about perfection at this stage.
 
                 The script should have clear scenes that make sense in a visual format. It should be a narrative that can be visualized.
             
                 The script should be optimized for a video of {SCRIPT_DURATION_IN_SECONDS} seconds.
-
-                {REQUIREMENTS}
 
             """),
             expected_output=dedent(f"""\
@@ -114,10 +106,10 @@ class ScriptTasks():
                 should indicate that the script passed the fact-check.
             """),
             agent=agent,
-            async_execution=True,
+            async_execution=False,
         )
     
-    def viralize(self, agent, concept):
+    def viralize(self, agent):
         #Call-to-Action: {CTA}
         return Task(
             description=dedent(f"""\
@@ -150,10 +142,6 @@ class ScriptTasks():
                 them feel more immersed in the story.
 
                 6. Add a call to action where appropriate, according to the tone of the script.
-
-
-                Concept: {concept}
-
             """),
             expected_output=dedent(f"""\
                 A viral-optimized version of the script with the following:
@@ -192,14 +180,14 @@ class ScriptTasks():
                 and maintain the integrity of the original idea.
             """),
             agent=agent,
-            async_execution=True,
+            async_execution=False,
         )
     
     def finalDraft(self, agent):
         return Task(
             description=dedent(f"""\
                 Revise the given *viral draft* into a better script, by incorporating the
-                *fact-check* corrections as appropriate. Tighten up the pacing, clarify any confusing
+                *fact-check* corrections as appropriate and circling back to the *brief*. Tighten up the pacing, clarify any confusing
                 points, and look for opportunities to heighten the emotional
                 impact. Ensure the script feels polished and ready for final
                 review.
@@ -379,4 +367,30 @@ class ScriptTasks():
             human_input=True,
         )
     
-    
+    def theFinalTouch(self, agent):
+        return Task(
+            description=dedent(f"""\
+                Circling back to the first *brief*, provide the final touch to the *final script*, ensuring it is fully ready. Review the script for any last-minute adjustments, polish, or enhancements that will elevate the overall quality and impact of the work.
+
+                1. Perform a final read-through of the script to catch any lingering errors, inconsistencies, or areas for improvement. Pay close attention to spelling, grammar, punctuation, and formatting to ensure the script is error-free and professional.
+
+                2. Consider the script as a whole and evaluate its narrative coherence, emotional resonance, and creative impact. Look for opportunities to enhance key moments, deepen characterizations, or refine dialogue to make the script more engaging and memorable.
+
+                3. Address any remaining feedback or suggestions from previous rounds of review, ensuring that all relevant points have been incorporated or addressed to the best of your ability. Make final adjustments based on this feedback to ensure the script meets the highest standards of quality.
+
+                4. Check the script against the original project brief and objectives to confirm that it aligns with the initial vision and goals for the work. Ensure that the script fulfills its intended purpose and effectively communicates the core concept or idea to the target audience.
+
+                5. Prepare the script for delivery by packaging it with any necessary supplementary materials, such as author notes, character breakdowns, or research references. Organize these materials in a clear and professional manner to enhance the reader's understanding and appreciation of the script.
+
+                The final touch should elevate the script to its highest potential, ensuring that it is polished, professional, and ready for its intended use. By carefully reviewing and refining the script, you can create a compelling and impactful work that resonates with the audience and achieves its creative goals.
+            """),
+            expected_output=dedent(f"""\
+                A fully polished and refined version of the script that is ready for production, publishing, or any other intended use case. The script should be error-free, professionally formatted, and engaging to the target audience. It should reflect the highest standards of quality and creativity, meeting or exceeding the initial project brief and objectives.
+
+                The final script package should include:
+                - The completed script file in the appropriate format for the use case, with all necessary edits and adjustments made.
+                - A short memo summarizing the final touch process, including any significant changes or enhancements made to the script.
+            """),
+            agent=agent,
+            async_execution=False,
+        )

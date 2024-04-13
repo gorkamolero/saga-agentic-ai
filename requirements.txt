@@ -1,2 +1,5 @@
 crewai
 exa_py
+anthropic
+langchain_anthropic
+python-dotenv
