@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from utils import print_agent_output
 
 from crewai import Crew, Process, Task, Agent
-from llms import GPT4Turbo, ClaudeHaiku
+from llms import GPT4Turbo, ClaudeHaiku, ClaudeOpus
 from datetime import datetime
 from random import randint
 from langchain.tools import tool
@@ -22,48 +22,59 @@ REQUIREMENTS = dedent(f"""\
     **Requirements**:
         - The script should be specifically structured for a YouTube video, consisting of a voiceover narration that accompanies a series of visual scenes.
 
-        - The script should be approximately {SCRIPT_DURATION_IN_WORDS} words, with a target duration of {SCRIPT_DURATION_IN_SECONDS} seconds when read aloud.
+        - NO ONE TALKS EXCEPT THE NARRATOR
 
-        - When crafting the script, keep the following requirements in mind:
-            - The script should be divided into clear, distinct scenes that
-            can be easily visualized. Each scene should be described in a 
-            way that translates well to a series of images or video clips.
+        - The script should have a target duration of {SCRIPT_DURATION_IN_SECONDS} seconds.
 
-            - The narration should be written in a conversational, engaging
-            style that complements the visuals and keeps the viewer 
-            interested throughout. Use descriptive language to help the
-            viewer imagine what they'll be seeing on screen.
+        - The script should be divided into clear, distinct scenes that
+        can be easily visualized. Each scene should be described in a 
+        way that translates well to a series of images or video clips.
 
-            - Ensure that the overall narrative flows logically from one 
-            scene to the next, creating a cohesive story arc that can be
-            conveyed through the combination of voiceover and visuals.
+        - Use descriptive language to help the
+        viewer imagine what they'll be seeing on screen.
 
-            - Consider pacing and timing. The script should be structured 
-            in a way that allows for natural pauses, transitions, and 
-            emphasis on key points or images.
+        - Ensure that the overall narrative flows logically from one 
+        scene to the next, creating a cohesive story arc that can be
+        conveyed through the combination of voiceover and visuals.
 
-            - Include relevant visual cues or directions in brackets or 
-            parentheses to guide the video creation process. Indicate 
-            what the viewer should be seeing at each point in the script.
+        - Consider pacing and timing. The script should be structured 
+        in a way that allows for natural pauses, transitions, and 
+        emphasis on key points or images.
 
-        - The script should have clear scenes that make sense in a visual format. It should be a narrative that can be visualized.
+        - Include relevant visual cues in brackets or 
+        parentheses to guide the video creation process. Indicate 
+        what the viewer should be seeing at each point in the script.
+
+        - IMAGES SHOULD BE STATIC, NO DESCRIPTION OF ANIMATION
 
         Key elements to consider:
             - Tone: {TONE}
             - Writers to Emulate: {WRITERS_TO_EMULATE}
             - Call-to-Action: {CTA}
             - Script Duration: {SCRIPT_DURATION_IN_SECONDS} seconds
-
-        The order of the script creation process is as follows:
-            0: BRIEF: big_boss
-            1: RESEARCH: researcher
-            2: OUTLINE: writer
-            3: FIRST DRAFT: writer
-            4: CIRCULARIZE: gen_z_viralizer
-            6: FINAL DRAFT: writer
-            7: CRITIQUE: critic_editor
-            8: SCRIPT: writer
 """)
+SCRIPT_CREATION_STEPS = dedent(f"""\
+    The order of the script creation process is as follows:
+    0: BRIEF: big_boss
+    1: RESEARCH: researcher
+    2: OUTLINE: writer. PASS THE FULL RESEARCH AND FULL BRIEF TO THIS TASK!
+    3: DRAFT: writer
+    4: CRITIQUE: critic_editor. PASS THE FULL RESEARCH, FULL BRIEF, AND DRAFT TO THIS TASK!
+    5: SCRIPT: writer
+    6: SAVE: archiver. PASS THE FINAL SCRIPT TO THIS AGENT!
+
+    Tasks should be done ONCE and NO MORE, in the order specified above.
+""")
+YOUTUBE_SCRIPT_REQUIREMENTS = dedent(f"""\
+    1. Start with a strong hook that immediately grabs the viewer's attention and sets the tone for the story.
+    2. Use concise, engaging language that is easy to follow and keeps viewers interested throughout the video.
+    3. Structure the script in short, distinct sections that can be easily visualized and translated into a series of video clips or images.
+    4. Incorporate cliffhangers, plot twists, or thought-provoking questions to maintain viewer engagement and encourage them to keep watching.
+    5. Use descriptive language and vivid imagery to help viewers imagine the scenes and characters, but avoid overly lengthy descriptions that may not translate well to video.
+    6. Include clear cues or directions for visual elements, such as [Cut to close-up of character's face] or [Montage of city scenes], to guide the video creation process.
+    7. Keep the script concise and targeted to the ideal YouTube video length, {SCRIPT_DURATION_IN_SECONDS} seconds.
+""")
+
 
 class ScriptTasks():
     def imagine(self, agent, concept):
@@ -74,15 +85,6 @@ class ScriptTasks():
                 This are the requirements: {REQUIREMENTS}
                 
                 - Define project scope, objectives, and deliverables for the script development process
-                - Establish an exact order of the tasks and workers to perform the script creation process. THIS IS CRITICAL
-                    1: RESEARCH: researcher
-                    2: OUTLINE: writer
-                    3: FIRST DRAFT: writer
-                    4: CIRCULARIZE: gen_z_viralizer
-                    5: HOOKIFY: gen_z_viralizer
-                    6: FINAL DRAFT: writer
-                    7: CRITIQUE: critic_editor
-                    8: SCRIPT: writer
 
                 - Clearly state the goals, target audience, key messages, duration and intended use case for the script. 
                 - Identify the core concept or idea that will serve as the foundation for the script, and establish the creative direction and tone for the project.
@@ -90,7 +92,8 @@ class ScriptTasks():
                 - Provide the tone, writing style and a brief summary of how it expands on the original idea in an innovative and engaging way.
                 - State any additional requirements or constraints
                 
-                Provide your reasons and a step-by-step explanation on how you achieved these results.
+                - !!!: Establish an exact order of the tasks and workers to perform the script creation process. THIS IS CRITICAL
+                    {SCRIPT_CREATION_STEPS}
             """),
             expected_output=dedent(f"""\
                 A detailed project brief that includes:
@@ -141,13 +144,13 @@ class ScriptTasks():
         # Take inspiration from the following writers: {WRITERS_TO_EMULATE}
         return Task(
             description=dedent(f"""\
-                Write the first draft of the YouTube video script based on the *brief*, the *outline*, the *research findings*.
-                
-                Craft a compelling monologue, with rich descriptions, and emotive language to bring the story, characters and narrative to life. Focus on getting the complete narrative down without worrying too much about perfection at this stage.
+                Write a compelling YouTube script based on the outline.
 
-                The script should have clear scenes that make sense in a visual format. It should be a narrative that can be visualized.
-            
-                The script should be optimized for a video of {SCRIPT_DURATION_IN_SECONDS} seconds.
+                Remember:
+
+                {YOUTUBE_SCRIPT_REQUIREMENTS}
+
+                {REQUIREMENTS}
 
             """),
             expected_output=dedent(f"""\
@@ -155,118 +158,6 @@ class ScriptTasks():
                     - Narrative voiceover
                     - Visual scene descriptions
                 The draft should cover the full story arc from beginning to end, divided into scenes.
-            """),
-            agent=agent,
-            async_execution=False,
-        )
-
-    def circularize(self, agent):
-        return Task(
-            description=dedent(f"""\
-                Restructure the script to have a circular narrative that
-                connects the end back to the beginning in a clever and
-                satisfying way. This could involve setting up a question or
-                mystery at the start that gets answered or resolved at the
-                end, creating a sense of closure and completeness.
-            """),
-            expected_output=dedent(f"""\
-                A revised script with a circular narrative structure that circles back on itself, with the ending connecting to the beginning in a meaningful way
-                that creates a sense of completeness and closure.
-            """),
-            max_iterations=2,
-        )
-
-    def hookify(self, agent):
-        return Task(
-            description=dedent(f"""\
-                Identify the most compelling, emotionally resonant elements of the script. Remember these key moments and themes.
-                
-                Then, enhance the script by adding a compelling hook at the beginning
-                that grabs the viewer's attention and draws them into the story.
-                
-                The hook should be intriguing, engaging, and relevant to the
-                core themes or ideas of the script. It should set the tone for
-                the rest of the video and make the viewer eager to continue
-                watching.
-            """),
-            expected_output=dedent(f"""\
-                An ttention-grabbing hook that draws the viewer in and sets the stage for the rest of the video. The hook should be compelling, relevant, and engaging, creating a sense of intrigue and anticipation.
-            """),
-            agent=agent,
-            async_execution=False,
-        )
-     
-    def finalDraft(self, agent):
-        return Task(
-            description=dedent(f"""\
-                Review the given enhancements into a better script, by incorporating the *critique* feedback. Ensure the script is polished, cohesive, and engaging, ready for the final review.
-
-                Remember the requirements: {REQUIREMENTS}
-
-                1. First and foremost, assess the overall narrative cohesion 
-                and creative tone of the script. Does the story flow 
-                logically and engagingly from beginning to end? Is the 
-                unique voice and style of the piece consistently maintained
-                throughout? These are the most critical elements to get right.
-
-                2. Consider the key points from the critic's review, especially
-                those related to structure, characterization, theme, and 
-                visual storytelling. Evaluate whether the script has 
-                sufficiently addressed any major concerns in these areas,
-                while still preserving the core creative vision.
-
-                3. Remain open to the critic's suggestions for improvement, but
-                don't feel obligated to incorporate every piece of feedback.
-                Some notes may be subjective or not fully aligned with the
-                script's intentions. Trust your instincts and make changes
-                only where you feel they genuinely enhance the work.
-
-                4. Once you're satisfied with the content, do a final technical
-                review. Double check formatting, page length, spelling, and
-                grammar. Make any necessary adjustments to ensure the script
-                is polished and professional.
-
-                5. Package the script with any relevant supplementary materials
-                such as author notes, character breakdowns, or research
-                references. Ensure these materials are clearly organized and
-                enhance the reader's understanding of the script.
-
-                The goal is to arrive at a final draft that is narratively
-                cohesive, creatively powerful, and technically impeccable. The
-                critic's feedback should inform but not dictate the ultimate
-                shape of the work. Prioritize changes that elevate the script's
-                core strengths and unique voice.
-            """),
-            expected_output=dedent(f"""\
-                The packaged, 100% finalized script, including:
-
-                1. The completed script file in the appropriate format for the
-                use case, reflecting any final content or technical edits 
-                based on a careful consideration of the critic's feedback.
-
-                2. A short memo that includes:
-                - Confirmation that the script is locked and ready for the
-                    next stage of the process.
-                - A brief summary of any significant changes made in 
-                    response to the critic's feedback, and the rationale
-                    behind those changes.
-                - Acknowledgement of any feedback that was considered but
-                    ultimately not incorporated, and the reasons for those
-                    decisions.
-                - A final assessment of how the script achieves its goals in
-                    terms of narrative cohesion, creative tone, and overall 
-                    impact.
-
-                3. Any relevant supplementary materials, such as:
-                - Author notes or a creator statement
-                - Character breakdowns or profiles
-                - Research references or source materials
-                - A brief synopsis or logline
-
-                These materials should be clearly organized and labeled in a 
-                way that enhances the reader's engagement with and understanding
-                of the script. The entire package should represent a polished, 
-                professional, and compelling final product.
             """),
             agent=agent,
             async_execution=False,
@@ -309,6 +200,10 @@ class ScriptTasks():
                 unanswered questions. Does the story hold together under
                 scrutiny? Are there any dangling threads or unresolved
                 issues that need to be addressed?
+
+                7. Make sure research is properly incorporated.
+                
+                8. Make sure the original intention of the brief is met.
                 
                 For each point of critique, provide specific examples from 
                 the script to illustrate your observations. Offer concrete
@@ -377,18 +272,10 @@ class ScriptTasks():
 
                 Remember, the *scriptCritique* is just one perspective. Trust your instincts and let your unique voice shine through in the final script.
 
-                Keep the requirements in mind: {REQUIREMENTS}
+                KEEP IN MIND THE ORIGINAL REQUIREMENTS
             """),
             expected_output=dedent(f"""\
-                The final, polished script package, including:
-
-                1. The completed script file, refined based on your creative judgment and adhering to all technical requirements.
-
-                2. If significant changes were made based on the *scriptCritique*, a brief summary of those changes and the rationale behind them. If you chose to stick closely to your original vision, a short explanation of why.
-
-                3. Any supplementary materials (e.g., author notes, character profiles, research references) that you feel will enhance the understanding and context of the script.
-
-                The final package should represent a compelling, professionally executed script that showcases your unique voice and creative vision.
+                The completed script, refined based on your creative judgment and adhering to all technical requirements.
             """),
             agent=agent,
             async_execution=False,
@@ -441,7 +328,7 @@ class ScriptAgents():
     def researcher(self):
         # Modeled after a fact-checker
         return Agent(
-            role="Expert Researcher and Factchecker",
+            role="Master Researcher",
             goal="To back creative concepts with thorough and relevant data",
             backstory=dedent(f"""
             You are an expert Researcher and Fact-checker. You specialize in gathering and synthesizing information to support and enrich creative concepts.
@@ -461,70 +348,42 @@ class ScriptAgents():
             role="The Master Writer of narrative, focusing on thematic depth and succinct storytelling",
             goal="To write scripts",
             backstory=dedent(f"""
-                You are the Master Writer: a seasoned wordsmith who elevates scripts to their full potential.
-                As a novelist turned scriptwriter, you have always favored a style
-                marked by its economy of words and its depth of emotion.
-                Your work is characterized by its vivid, yet straightforward
-                descriptions and dialogue that cuts to the heart of human experiences.
+                You are the Master Writer: a seasoned wordsmith who crafts compelling scripts for YouTube videos. As a novelist turned YouTube scriptwriter, you have adapted your style to suit the platform, focusing on engaging storytelling that captures viewers' attention from the very first sentence.
 
-                Your mission is to strip back unnecessary elements from our scripts,
-                focusing on strong, simple language and clear, impactful themes.
-                With a penchant for robust, impactful narratives, you refine our stories
-                to ensure they are potent and resonate deeply with audiences,
-                while remaining refreshingly direct.
+                Your work is characterized by concise, punchy sentences that quickly get to the heart of the matter, as well as vivid descriptions and dialogue that immerse viewers in the story. You have a keen understanding of pacing and structure, crafting scripts that maintain a sense of momentum and keep viewers hooked until the very end.
+
+                With a penchant for robust, impactful narratives, you write stories that resonate deeply with YouTube audiences, delivering your message in a way that is both direct and emotionally engaging.
+
+                You emulate the styles of literary greats like {WRITERS_TO_EMULATE}, infusing your scripts with their unique voices and narrative techniques. Your scripts are a blend of mystery, suspense, and emotional depth, leaving viewers both entertained and intellectually stimulated.
             """),
             #llm=GPT4Turbo,
-            llm=ClaudeHaiku,
+            llm=ClaudeOpus,
             memory=True,
             allow_delegation=False,
             step_callback=lambda x: print_agent_output(x,"Senior Writer Agent")
         )
 
-    def gen_z_viralizer(self):
-        # Modeled after a young social media influencer
-        return Agent(
-            role="Young genius, expert in viral video structures, social media algorithms and engagement psychology and theory",
-            goal="To steer and refine scripts for perfect engagement with modern platforms and audiences.",
-            backstory=dedent(f"""
-                You are a digital native who first went viral at age 14. A young genius expert in viral video structures, social media algorithms and engagement psychology and theory.
-                Your sharpness and depth of intellect and creativity has 
-                allowed you to work with the best content creators in the world.
-
-                Your mission is to modify scripts by using your knowledge
-                of social media algorithms and engagement psychology and tricks
-                to ensure they resonate with the target audience and maximize engagement.
-            """),
-            llm=ClaudeHaiku,
-            max_iterations=2,
-            memory=False,
-            #tools=human_tools,
-            step_callback=lambda x: print_agent_output(x,"Gen Z Viralizer Agent"),
-            allow_delegation=False
-        )
-
     def critic_editor(self):
         return Agent(
-            role="Expert analyst, critic, advisor, and legendary editor, ensuring precision, depth, and artistic quality",
-            goal="To enhance the narrative, technical, and emotional aspects of scripts through perceptive critiques and meticulous editing",
+            role="Ruthless analyst, unforgiving critic, and meticulous editor, ensuring scripts meet the highest standards of precision, depth, and artistic quality",
+            goal="To relentlessly critique and edit scripts, pushing writers to elevate their work to exceptional levels",
             backstory=dedent(f"""
-                You are a unique blend of an expert analyst, critic, advisor, and legendary editor. With a background steeped in both the theory and practice of filmmaking, you view scripts through a lens that appreciates traditional narrative structures, innovative cinematic techniques, and the power of storytelling.
+                You are a formidable combination of a ruthless analyst, an unforgiving critic, and a meticulous editor. With a background steeped in both the theory and practice of filmmaking, you view scripts through a lens that demands nothing less than excellence in traditional narrative structures, innovative cinematic techniques, and the power of storytelling.
 
-                As a critic and advisor, your critiques blend a deep appreciation of storytelling with a keen eye for directorial flair and the ability to connect emotionally with an audience. You challenge and inspire writers to elevate their work, using your understanding of storytelling's nuances to guide projects that not only entertain but linger in the minds and emotions of viewers.
+                As a critic and advisor, your critiques are razor-sharp and unapologetic. You have no patience for mediocrity and are quick to point out flaws in storytelling, character development, and emotional resonance. You challenge writers to push themselves beyond their comfort zones, using your deep understanding of storytelling's nuances to guide projects towards greatness.
 
-                As an editor, you are known as a modern-day Maxwell Perkins, with a storied history of transforming ambitious drafts into definitive works. Your reputation as a nurturing yet incisive editor draws both budding and seasoned writers who seek your mentorship and keen editorial eye. With a meticulous eye for detail and a profound understanding of storytelling, you refine scripts to meet the pinnacle of literary excellence, ensuring they resonate deeply with audiences and secure their place as memorable and impactful works.
+                As an editor, you are known as a modern-day Maxwell Perkins, but with a reputation for being uncompromising in your pursuit of perfection. You have a storied history of transforming ambitious drafts into definitive works, but only after putting writers through a gauntlet of revisions and critiques. Your keen editorial eye is both feared and respected, as you refuse to settle for anything less than the pinnacle of literary excellence.
 
-                Your mission is to uphold your legendary status by combining your critical insights and editorial prowess to elevate every project to its maximum potential, maintaining a legacy of quality and success.
+                Your mission is to uphold your legendary status by combining your critical insights and editorial prowess to elevate every project to its maximum potential, even if it means bruising a few egos along the way. You are the gatekeeper of quality, and you will not rest until every script meets your exacting standards.
             """),
-            llm=ClaudeHaiku,
+            llm=GPT4Turbo,
             max_iterations=1,
-            #tools=human_tools
-            step_callback=lambda x: print_agent_output(x,"Critic Editor Agent"),
-
+            step_callback=lambda x: print_agent_output(x, "Critic Editor Agent"),
         )
 
     def archiver(self):
         return Agent(
-            role='Final Script Archiver',
+            role='saves the script to a markdown file',
             goal='Take in the final script and write it to a Markdown file',
             backstory="""You are a efficient and simple agent that gets a final script and saves it to a markdown file. in a quick and efficient manner""",
             llm=GPT4Turbo,
@@ -562,7 +421,6 @@ def main():
     # Agents
     big_boss = agents.big_boss()
     researcher = agents.researcher()
-    gen_z_viralizer = agents.gen_z_viralizer()
     senior_writer = agents.senior_writer()
     critic_editor = agents.critic_editor()
     archiver = agents.archiver()
@@ -571,22 +429,16 @@ def main():
     brief = tasks.imagine(big_boss, concept)
     researchFindings = tasks.research(researcher)
     outline = tasks.outline(senior_writer)
-    firstDraft = tasks.draft(senior_writer)
-    secondDraft = tasks.circularize(gen_z_viralizer)
-    hookify = tasks.hookify(gen_z_viralizer)
-    finalDraft = tasks.finalDraft(senior_writer)
+    draft = tasks.draft(senior_writer)
     scriptCritique = tasks.critique(critic_editor)
     script = tasks.script(senior_writer)
     saveOutput = tasks.saveOutput(archiver)
 
     researchFindings.context = [brief]
     outline.context = [brief, researchFindings]
-    firstDraft.context = [brief, outline]
-    secondDraft.context = [firstDraft]
-    hookify.context = [secondDraft]
-    finalDraft.context = [hookify, secondDraft]
-    scriptCritique.context = [hookify, firstDraft]
-    script.context = [finalDraft, scriptCritique, brief]
+    draft.context = [brief, outline]
+    scriptCritique.context = [draft, brief, researchFindings]
+    script.context = [draft, scriptCritique,]
     saveOutput.context = [script]
 
 
@@ -595,7 +447,6 @@ def main():
         agents=[
             big_boss,
             researcher,
-            gen_z_viralizer,
             senior_writer,
             critic_editor,
             archiver,
@@ -604,17 +455,14 @@ def main():
             brief,
             researchFindings,
             outline,
-            firstDraft,
-            secondDraft,
-            hookify,
-            finalDraft,
+            draft,
             scriptCritique,
             script,
             saveOutput,
         ],
         #manager_llm=ClaudeOpus,
         manager_llm=GPT4Turbo,
-        process=Process.hierarchical,
+        process=Process.sequential,
         memory=False,
         verbose=2,
         step_callback=lambda x: print_agent_output(x,"MasterCrew Agent")
