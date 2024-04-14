@@ -45,8 +45,6 @@ REQUIREMENTS = dedent(f"""\
         parentheses to guide the video creation process. Indicate 
         what the viewer should be seeing at each point in the script.
 
-        - IMAGES SHOULD BE STATIC, NO DESCRIPTION OF ANIMATION
-
         Key elements to consider:
             - Tone: {TONE}
             - Writers to Emulate: {WRITERS_TO_EMULATE}
@@ -73,6 +71,9 @@ YOUTUBE_SCRIPT_REQUIREMENTS = dedent(f"""\
     5. Use descriptive language and vivid imagery to help viewers imagine the scenes and characters, but avoid overly lengthy descriptions that may not translate well to video.
     6. Include clear cues or directions for visual elements, such as [Cut to close-up of character's face] or [Montage of city scenes], to guide the video creation process.
     7. Keep the script concise and targeted to the ideal YouTube video length, {SCRIPT_DURATION_IN_SECONDS} seconds.
+    8. IMAGERY SHOULD BE STATIC, NO DESCRIPTION OF ANIMATION
+    9. NO TEXT ON SCREEN
+    10. NO DIALOGUE. ONLY NARRATION
 """)
 
 
